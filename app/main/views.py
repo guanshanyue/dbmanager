@@ -323,3 +323,5 @@ def mysql_manage(customer_id):
     mysql_privilege= mysql_privileges.query.filter_by(customer_id=customer_id)
     return render_template('mysql_privileges.html',mysql_privileges=mysql_privilege)
 
+
+

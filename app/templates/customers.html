@@ -26,7 +26,6 @@
                                             <th>数据库用户</th>
                                             <th>本地保存</th>
                                             <th>远程备份节点</th>
-                                            <th>状态</th>
                                             <th>操作</th>
                                         </tr>
                                     </thead>
@@ -47,18 +46,8 @@
                                                 <td  align="center"><i class="fa fa-times fa-lg"></i></td>
                                             {% endif %}
                                             <td >{{ customer.backhosts.host_node }}</td>
-                                            {% if customer.customers_status == 0 %}
-                                                <td  align="center"><i class="fa fa-refresh fa-lg fa-spin"></i></td>
-                                            {% else %}
-                                                <td  align="center"><i class="fa fa-times-circle fa-lg"></i></td>
-                                            {% endif %}
-
-                                            <td align="center">
-                                                {% if customer.customers_status == 0 %}
-                                                <a href="#" class="back_oper" customer_id="{{ customer.id }}" customer_oper="stop_back" title="停止备份"><i class="fa fa-stop fa-lg"></i></a>
-                                                {% else %}
-                                                <a href="{{ url_for('main.mysql_manage', customer_id=customer.id)}}" class="back_oper" customer_id="{{ customer.id }}" customer_oper="start_back" title="开启备份"><i class="fa fa-play fa-lg"></i></a>
-                                                {% endif %}
+                                            <td>
+                                                <a href="{{ url_for('main.mysql_manage',customer_id=customer.id) }}" title="管理"><i class="fa fa-play fa-lg"></i></a>
                                             </td>
                                         </tr>
                                     {% endfor %}
