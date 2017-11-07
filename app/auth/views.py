@@ -1,4 +1,11 @@
-#coding=utf-8
+#!/usr/bin/python
+# coding=utf-8
+#__author__ = 'wangqy'
+
+import sys
+reload(sys)
+sys.setdefaultencoding('utf-8')
+
 from flask import render_template, redirect, request, url_for, flash,abort
 from . import auth
 from ..models import users

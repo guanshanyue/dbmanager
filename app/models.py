@@ -132,6 +132,7 @@ class mysql_privileges(db.Model):
     user_name=db.Column(db.String(64))
     user_pass=db.Column(db.String(64))
     user_status=db.Column(db.Integer,default=0)
+    user_ip=db.Column(db.String(32))
     user_db=db.Column(db.String(254))
     user_desc=db.Column(db.String(128))
     is_delete=db.Column(db.Integer,default=0)
@@ -139,4 +140,4 @@ class mysql_privileges(db.Model):
     customer_id = db.Column(db.Integer,db.ForeignKey('customers.id',ondelete='CASCADE', onupdate='CASCADE'))
 
     def __repr__(self):
-        return '<mysql_privileges %r>' % self.user_name
+        return '<user_name %r>' % self.user_name

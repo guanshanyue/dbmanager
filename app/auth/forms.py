@@ -1,4 +1,10 @@
-# -*- coding: UTF-8 -*-
+#!/usr/bin/python
+# coding=utf-8
+#__author__ = 'wangqy'
+
+import sys
+reload(sys)
+sys.setdefaultencoding('utf-8')
 from flask.ext.wtf import Form
 from wtforms import StringField, PasswordField, BooleanField, SubmitField,validators
 from wtforms.validators import DataRequired, Length,EqualTo, Email, DataRequired

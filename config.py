@@ -1,3 +1,10 @@
+#!/usr/bin/python
+# coding=utf-8
+#__author__ = 'wangqy'
+
+import sys
+reload(sys)
+sys.setdefaultencoding('utf-8')
 import os
 basedir = os.path.abspath(os.path.dirname(__file__))
 
@@ -17,7 +24,7 @@ class Config:
 
 class ProductionConfig(Config):
     DEBUG = True
-    #SQLALCHEMY_DATABASE_URI = os.environ.get('DATABASE_URL') or  'mysql://root:123456@127.0.0.1:3306/backmanage?charset=utf8'
+    #SQLALCHEMY_DATABASE_URI = os.environ.get('DATABASE_URL') or  'mysqlpt://root:123456@127.0.0.1:3306/backmanage?charset=utf8'
     SQLALCHEMY_DATABASE_URI =  'mysql://root:123456@127.0.0.1:3306/backmanage?charset=utf8'
 
 

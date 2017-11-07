@@ -177,7 +177,7 @@ def upload_ftp(customer_name,ftp_ip,ftp_user,ftp_pass,ftp_dir,ftp_port,timeout,l
 
 
 def main():
-    print 'start backup mysql...'
+    print 'start backup mysqlpt...'
     back_result = backup_mysql()
 
     params_dict = {'operation':'auth','user':customers_user,'pass':customers_pass}
@@ -195,7 +195,7 @@ def main():
         Token = GetToken()
         SendMessage(Token,message)
         sys.exit()
-    print 'backup mysql success,uploading backup ftp server...'
+    print 'backup mysqlpt success,uploading backup ftp server...'
 
     local_back_file = back_result['file_path']
     upload_result = upload_ftp(str(auth_result['customer_name']),str(auth_result['ftp_ip']),str(auth_result['ftp_user'])

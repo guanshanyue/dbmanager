@@ -38,7 +38,7 @@
                         <li>
                             <a href="#"><i class="fa fa-table fa-fw"></i> 权限管理<span class="fa arrow"></span></a>
                             <ul class="nav nav-second-level">
-                                <li><a href="{{ url_for('main.mysql_manage', customer_id=5)}}">账号列表</a></li>
+                                <li><a href="{{ url_for('mysql.mysql_index')}}">账号列表</a></li>
                                 <li><a href="#">数据库列表</a></li>
                             </ul>
                         </li>
@@ -51,7 +51,6 @@
 
     {% block content %}
     {% endblock %}
-
     </div>
     <!-- /#wrapper -->
 </body>

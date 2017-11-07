@@ -1,6 +1,11 @@
 #!/usr/bin/python
 # coding=utf-8
-#__author__ = 'CY'
+#__author__ = 'wangqy'
+
+import sys
+reload(sys)
+sys.setdefaultencoding('utf-8')
+
 from flask import  render_template, request, flash,abort,redirect,url_for
 from flask.ext.login import login_required, current_user
 from . import main
@@ -13,44 +18,9 @@ from random import choice
 import py_compile
 import datetime,MySQLdb,time
 import json,urllib2
-class DB():
-    def __init__(self, DB_HOST, DB_PORT, DB_USER, DB_PWD, DB_NAME):
-        self.DB_HOST = DB_HOST
-        self.DB_PORT = DB_PORT
-        self.DB_USER = DB_USER
-        self.DB_PWD = DB_PWD
-        self.DB_NAME = DB_NAME
 
-        self.conn = self.getConnection()
-
-    def getConnection(self):
-        return MySQLdb.Connect(
-                           host=self.DB_HOST,
-                           port=self.DB_PORT,
-                           user=self.DB_USER,
-                           passwd=self.DB_PWD,
-                           db=self.DB_NAME,
-                           charset='utf8'
-                           )
-
-    def query(self, sqlString):
-        cursor=self.conn.cursor()
-        cursor.execute(sqlString)
-        returnData=cursor.fetchall()
-        cursor.close()
-        return returnData
-
-    def update(self, sqlString):
-        cursor=self.conn.cursor()
-        cursor.execute(sqlString)
-        self.conn.commit()
-        cursor.close()
-
-    def close(self):
-        self.conn.close()
 def GenPassword(length=8,chars=string.ascii_letters+string.digits):
     return ''.join([choice(chars) for i in range(length)])
-
 
 @main.route('/',methods=['GET', 'POST'])
 @login_required
@@ -108,7 +78,7 @@ def build_config():
         db_name = request.form['db_name']
 
         customer = customers.query.filter(or_(customers.customers_name==customers_name,customers.customers_short==customers_short
-                                                 ,customers.db_name==db_name)).all()
+                                                 ,customers.db_name==db_name,customers.db_ip==db_ip)).all()
         if customer:
             flash(u'%s平台 添加记录失败,客户名称/数据库名称已存在!' %customers_name)
             backhost = backhosts.query.all()
@@ -311,17 +281,8 @@ def mysql_manage():
     backfaileds = backfailed.query.order_by(desc(backfailed.count_date)).all()
 '''
 
-@main.route('/mysql_manage/<int:customer_id>',methods=['GET', 'POST'])
-@login_required
-def mysql_manage(customer_id):
-    mysql_privilege= mysql_privileges.query.filter_by(customer_id=customer_id).first()
-    if mysql_privilege is  None:
-        customer = customers.query.filter_by(id=customer_id).first()
-        mysql_privilege=mysql_privileges(customer_id=customer.id,user_name=customer.db_user,user_pass=customer.db_pass,user_db=customer.db_name)
-        db.session.add(mysql_privilege)
-        db.session.commit()
-    mysql_privilege= mysql_privileges.query.filter_by(customer_id=customer_id)
-    return render_template('mysql_privileges.html',mysql_privileges=mysql_privilege)
+
+
 
 
 
