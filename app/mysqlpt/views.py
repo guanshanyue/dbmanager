@@ -63,7 +63,7 @@ def mysql_index():
     if request.method == 'POST':
         pass
     else:
-        mysql_privilege = mysql_privileges.query.order_by(desc(mysql_privileges.id)).all()
+        mysql_privilege = mysql_privileges.query.filter_by(is_delete=0).order_by(desc(mysql_privileges.id)).all()
         return render_template('mysqlpt/mysql_privileges.html',mysql_privileges=mysql_privilege)
 
 @mysql.route('/mysql_manage/<int:customer_id>',methods=['GET', 'POST'])
@@ -79,7 +79,7 @@ def mysql_manage(customer_id):
             mysql_privilege=mysql_privileges(customer_id=customer.id,user_name=customer.db_user,user_pass=customer.db_pass,user_db=customer.db_name)
             db.session.add(mysql_privilege)
             db.session.commit()
-        mysql_privilege= mysql_privileges.query.filter_by(customer_id=customer_id)
+        mysql_privilege= mysql_privileges.query.filter_by(customer_id=customer_id,is_delete=0)
         return render_template('mysqlpt/mysql_privileges.html',mysql_privileges=mysql_privilege)
 
 @mysql.route('/mysql_resetpassword/<int:customer_id>',methods=['GET', 'POST'])
@@ -102,21 +102,23 @@ def mysql_resetpassword(customer_id):
                     sql="update mysql.user set authentication_string=password(\'"+password02+"\') where user=\'"+mysql_privilege.user_name+"\'"
                     db1.update(sql)
                     db1.update('flush privileges;')
-                    mysql_privilege.user_pass=password02
-                    db.session.add(mysql_privilege)
+                    t1 = mysql_privileges.query.filter_by(user_name=mysql_privilege.user_name,is_delete=0)
+                    for i in t1:
+                        i.user_pass=password02
+                        db.session.add(i)
                     db.session.commit()
                     flash("密码更新成功")
-            mysql_privilege = mysql_privileges.query.filter_by(id=customer_id)
-            return render_template('mysqlpt/mysql_privileges.html',mysql_privileges=mysql_privilege)
         except Exception as e:
-            return render_template('mysqlpt/test.html',test_id=sql)
-        mysql_privilege = mysql_privileges.query.filter_by(id=customer_id)
-        return render_template('mysqlpt/mysql_privileges.html',mysql_privileges=mysql_privilege)
+            return render_template('mysqlpt/test.html',test_id='您访问的网页不存在，请稍后再试！')
+        return redirect(url_for('mysql.mysql_index'))
     else:
         return render_template('mysqlpt/mysql_resetpassword.html',customer_id=customer_id)
 
 @mysql.route('/mysql_changeprivileges/<int:customer_id>',methods=['GET', 'POST'])
 @login_required
+##user_status=0 只读权限
+##user_status=1 读写权限
+##user_status=2 无权限
 def mysql_changeprivileges(customer_id):
     if request.method == 'POST':
         try:
@@ -125,57 +127,114 @@ def mysql_changeprivileges(customer_id):
             customer=customers.query.filter_by(id=mysql_privilege.customer_id).first()
             if customer.db_user ==  mysql_privilege.user_name:
                 flash("管理员密码禁止修改")
-                #return render_template('mysqlpt/test.html',test_id=customer_id)
             else:
                 if customer_oper == 'readonly':
                     if mysql_privilege.user_status == 0:
                         flash("您目前为只读权限，无需修改")
-                        #mysql_privilege = mysql_privileges.query.filter_by(id=customer_id)
-                        #return render_template('mysqlpt/mysql_privileges.html',mysql_privileges=mysql_privilege)
                     else:
                         db1=DB(customer.db_ip,int(customer.db_port),customer.db_user,customer.db_pass,customer.db_name)
-                        sql1="REVOKE SELECT, INSERT, UPDATE, DELETE, CREATE, DROP, INDEX, ALTER, CREATE TEMPORARY TABLES, " \
-                            "LOCK TABLES, EXECUTE, CREATE VIEW, SHOW VIEW, CREATE ROUTINE, ALTER ROUTINE, EVENT, TRIGGER ON "\
-                            +mysql_privilege.user_db+".* FROM '"+mysql_privilege.user_name+"'@'%';"
+                        if mysql_privilege.user_status == 1:
+                            sql1="REVOKE SELECT, INSERT, UPDATE, DELETE, CREATE, DROP, INDEX, ALTER, CREATE TEMPORARY TABLES, " \
+                                "LOCK TABLES, EXECUTE, CREATE VIEW, SHOW VIEW, CREATE ROUTINE, ALTER ROUTINE, EVENT, TRIGGER ON "\
+                                +mysql_privilege.user_db+".* FROM '"+mysql_privilege.user_name+"'@'%';"
+                            db1.update(sql1)
+                            db1.update('flush privileges;')
                         sql2="GRANT SELECT ON "+mysql_privilege.user_db+".* to '"+mysql_privilege.user_name+"'@'%';"
-                        db1.update(sql1)
                         db1.update(sql2)
                         db1.update('flush privileges;')
                         mysql_privilege.user_status=0
                         db.session.add(mysql_privilege)
                         db.session.commit()
                         flash("修改为只读权限")
-                        #return render_template('mysqlpt/test.html',test_id=sql1)
-                    #mysql_privilege = mysql_privileges.query.filter_by(id=customer_id)
-                    #return render_template('mysqlpt/mysql_privileges.html',mysql_privileges=mysql_privilege)
+
                 else:
-                    if mysql_privilege.user_status == 1:
-                        flash("您目前为读写权限，无需修改")
-                        #mysql_privilege = mysql_privileges.query.filter_by(id=customer_id)
-                        #return render_template('mysqlpt/mysql_privileges.html',mysql_privileges=mysql_privilege)
-                    else:
-                        db1=DB(customer.db_ip,int(customer.db_port),customer.db_user,customer.db_pass,customer.db_name)
-                        sql1="REVOKE SELECT ON "+mysql_privilege.user_db+".* FROM '"+mysql_privilege.user_name+"'@'%';"
-                        sql2="GRANT SELECT, INSERT, UPDATE, DELETE, CREATE, DROP, INDEX, ALTER, CREATE TEMPORARY TABLES, " \
+                    if customer_oper == 'readwrite':
+                        if mysql_privilege.user_status == 1:
+                            flash("您目前为读写权限，无需修改")
+                        else:
+                            db1=DB(customer.db_ip,int(customer.db_port),customer.db_user,customer.db_pass,customer.db_name)
+                            if mysql_privilege.user_status == 0:
+                                sql1="REVOKE SELECT ON "+mysql_privilege.user_db+".* FROM '"+mysql_privilege.user_name+"'@'%';"
+                                db1.update(sql1)
+                                db1.update('flush privileges;')
+                            sql2="GRANT SELECT, INSERT, UPDATE, DELETE, CREATE, DROP, INDEX, ALTER, CREATE TEMPORARY TABLES, " \
                             "LOCK TABLES, EXECUTE, CREATE VIEW, SHOW VIEW, CREATE ROUTINE, ALTER ROUTINE, EVENT, TRIGGER ON "\
                             +mysql_privilege.user_db+".* to '"+mysql_privilege.user_name+"'@'%';"
-                        db1.update(sql1)
-                        db1.update(sql2)
-                        db1.update('flush privileges;')
-                        mysql_privilege.user_status=1
-                        db.session.add(mysql_privilege)
-                        db.session.commit()
-                        flash("修改为读写权限")
-                        #return render_template('mysqlpt/test.html',test_id=sql1)
-            mysql_privilege = mysql_privileges.query.filter_by(id=customer_id)
-            return render_template('mysqlpt/mysql_privileges.html',mysql_privileges=mysql_privilege)
+                            db1.update(sql2)
+                            db1.update('flush privileges;')
+                            mysql_privilege.user_status=1
+                            db.session.add(mysql_privilege)
+                            db.session.commit()
+                            flash("修改为读写权限")
+                            return redirect(url_for('mysql.mysql_index'))
+                    else:
+                        if mysql_privilege.user_status == 2:
+                            flash("您目前为无权限，无需修改")
+                        else:
+                            db1=DB(customer.db_ip,int(customer.db_port),customer.db_user,customer.db_pass,customer.db_name)
+                            if mysql_privilege.user_status == 0:
+                                sql1="REVOKE SELECT ON "+mysql_privilege.user_db+".* FROM '"+mysql_privilege.user_name+"'@'%';"
+                                db1.update(sql1)
+                                db1.update('flush privileges;')
+                            elif mysql_privilege.user_status == 1:
+                                sql1="REVOKE SELECT, INSERT, UPDATE, DELETE, CREATE, DROP, INDEX, ALTER, CREATE TEMPORARY TABLES, " \
+                                "LOCK TABLES, EXECUTE, CREATE VIEW, SHOW VIEW, CREATE ROUTINE, ALTER ROUTINE, EVENT, TRIGGER ON "\
+                                +mysql_privilege.user_db+".* FROM '"+mysql_privilege.user_name+"'@'%';"
+                                db1.update(sql1)
+                                db1.update('flush privileges;')
+                            else:
+                                db1.close()
+                                flash("您目前为无权限，无需修改")
+                            mysql_privilege.user_status=2
+                            db.session.add(mysql_privilege)
+                            db.session.commit()
+                            flash("目前对"+mysql_privilege.user_db+"无访问权限")
+                        return redirect(url_for('mysql.mysql_index'))
         except Exception as e:
             return render_template('mysqlpt/test.html',test_id='您访问的页面不存在，请稍后重试')
-        #mysql_privilege = mysql_privileges.query.filter_by(id=customer_id).first()
-        #return render_template('mysqlpt/mysql_changeprivileges.html',mysql_privilege=mysql_privilege)
+        return redirect(url_for('mysql.mysql_index'))
     else:
-        mysql_privilege = mysql_privileges.query.filter_by(id=customer_id).first()
+        mysql_privilege = mysql_privileges.query.filter_by(id=customer_id,is_delete=0).first()
         return render_template('mysqlpt/mysql_changeprivileges.html',mysql_privilege=mysql_privilege)
+
+@mysql.route('/mysql_dropusers/<int:customer_id>',methods=['GET', 'POST'])
+@login_required
+def mysql_dropusers(customer_id):
+    if request.method == 'POST':
+        try:
+            customer_oper=request.form['optionsRadiosInline']
+            mysql_privilege = mysql_privileges.query.filter_by(id=customer_id).first()
+            customer=customers.query.filter_by(id=mysql_privilege.customer_id).first()
+            db1=DB(customer.db_ip,int(customer.db_port),customer.db_user,customer.db_pass,customer.db_name)
+            if customer.db_user ==  mysql_privilege.user_name:
+                flash("管理员密码禁止修改")
+            else:
+                if customer_oper == 'yes':
+                    if mysql_privilege.user_status == 0:
+                        sql1="REVOKE SELECT ON "+mysql_privilege.user_db+".* FROM '"+mysql_privilege.user_name+"'@'%';"
+                        db1.update(sql1)
+                        db1.update('flush privileges;')
+                    elif mysql_privilege.user_status == 1:
+                        sql1="REVOKE SELECT, INSERT, UPDATE, DELETE, CREATE, DROP, INDEX, ALTER, CREATE TEMPORARY TABLES, " \
+                        "LOCK TABLES, EXECUTE, CREATE VIEW, SHOW VIEW, CREATE ROUTINE, ALTER ROUTINE, EVENT, TRIGGER ON "\
+                        +mysql_privilege.user_db+".* FROM '"+mysql_privilege.user_name+"'@'%';"
+                        db1.update(sql1)
+                        db1.update('flush privileges;')
+                    mysql_privilege.is_delete=1
+                    db.session.add(mysql_privilege)
+                    db.session.commit()
+                    mysql_privilege.user_status=2
+                    db.session.add(mysql_privilege)
+                    db.session.commit()
+                    flash("账号"+mysql_privilege.user_name+"对"+mysql_privilege.user_db+"数据库的访问权限已收回")
+                else:
+                    flash("权限没有变更")
+            return redirect(url_for('mysql.mysql_index'))
+        except Exception as e:
+            return render_template('mysqlpt/test.html',test_id='您访问的页面不存在，请稍后重试')
+    else:
+        mysql_privilege = mysql_privileges.query.filter_by(id=customer_id,is_delete=0).first()
+        return render_template('mysqlpt/mysql_dropuser.html',mysql_privilege=mysql_privilege)
 
 
 

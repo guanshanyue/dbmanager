@@ -39,8 +39,10 @@
                                             <td>{{ mysql_privilege.user_name }}</td>
                                             {% if mysql_privilege.user_status == 0 %}
                                                 <td  align="center">只读</td>
-                                            {% else %}
+                                            {% elif mysql_privilege.user_status == 1  %}
                                                 <td  align="center">读写</td>
+                                            {% elif mysql_privilege.user_status == 2  %}
+                                                <td  align="center">无</td>
                                             {% endif %}
                                             <td>{{ mysql_privilege.user_db }}</td>
                                             <td>{{ mysql_privilege.user_ip }}</td>
@@ -51,7 +53,7 @@
                                                 <a href="{{ url_for('mysql.mysql_changeprivileges',customer_id=mysql_privilege.id)}}"     title="修改权限" type="button" class="btn btn-info btn-circle" > <i class="fa fa-check"></i></a>
                                             </td>
                                             <td align="center">
-                                                <a href="#"   title="删除" type="button" class="btn btn-warning btn-circle" > <i class="fa fa-times"></i></a>
+                                                <a href="{{ url_for('mysql.mysql_dropusers',customer_id=mysql_privilege.id)}}"   title="删除" type="button" class="btn btn-warning btn-circle" > <i class="fa fa-times"></i></a>
                                             </td>
                                         </tr>
                                     {% endfor %}
