@@ -1,0 +1,69 @@
+{% extends "mysqlpt/base_mysql.html" %}
+{% block title %}MySQL管理平台{% endblock %}
+{% block content %}
+
+        <div id="page-wrapper">
+            <div class="row">
+                <div class="col-lg-12">
+                    <h2 class="page-header">权限管理</h2>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-lg-12">
+                    <div class="panel panel-default">
+                        <div class="panel-heading">账号列表</div>
+                        <div class="panel-body">
+                            {% for message in get_flashed_messages() %}
+                            <div class="alert alert-info">
+                                <button type="button" class="close" data-dismiss="alert">&times;</button>
+                            {{ message }}
+                            </div>
+                            {% endfor %}
+                            <form role="form" action="" method="post">
+							   <ul class="form_list clearfix">
+                                   <li><label>账号：</label><input class="input-sm" name="user_name"></li>
+                                   <li><label>密码：</label><input class="input-sm" name="user_pass"></li>
+                                   <li>
+                                        <label>数据库：</label>
+                                        <select class="input-sm" name="user_db">
+                                           {% for back_host in back_hosts %}
+                                               <option   value= "{{ back_host.user_db }}"> {{ back_host.user_db }} </option>
+                                           {% endfor %}
+                                        </select>
+                                   </li>
+                                   <li><label>备注：</label><input class="input-sm" name="user_desc"></li>
+                                   <li>
+                                   <label>权限：</label>
+									   <select class="input-sm" name="privilege_id">
+                                           <option   value= "0"> 只读 </option>
+                                           <option   value= "1"> 读写 </option>
+									   </select>
+                                   </li>
+                                   <li>
+                                        <label class="input-sm "><button type="submit" class="btn btn-default ">提交</button></label>
+                                        <label class="input-sm "><button type="reset"  class="btn btn-default ">重置</button></label>
+                                   </li>
+                               </ul>
+                            </form>
+                        </div>
+                    </div>
+                    <!--表格结束-->
+                </div>
+            </div>
+
+
+        </div>
+        <!-- /#page-wrapper -->
+
+    <!-- 表格搜索等调用 -->   
+    <script src="/static/js/dataTables/jquery.dataTables.min.js"></script><!--筛选/分页-->
+    <script src="/static/js/dataTables/dataTables.bootstrap.min.js"></script>
+    <script>
+    $(document).ready(function() {
+        $('#dataTables-example').DataTable({
+                responsive: true
+        });
+    });
+    </script>
+
+{% endblock %}
